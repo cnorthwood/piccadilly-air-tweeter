@@ -8,12 +8,12 @@ def get_twitter_oauth_handler():
     if not os.path.exists("secrets.pickle"):
         consumer_key = input("Twitter Consumer Key: ")
         consumer_secret = input("Twitter Consumer Secret: ")
-        with open("secrets.pickle", "w") as pickle_file:
+        with open("secrets.pickle", "wb") as pickle_file:
             pickle.dump(
                 {"consumer_key": consumer_key, "consumer_secret": consumer_secret, "accounts": {}},
                 pickle_file,
             )
-    with open("secrets.pickle") as pickle_file:
+    with open("secrets.pickle", "rb") as pickle_file:
         secrets = pickle.load(pickle_file)
         return (
             tweepy.OAuthHandler(secrets["consumer_key"], secrets["consumer_secret"]),
@@ -32,7 +32,7 @@ def log_in_to_twitter(account_name):
             "access_token": auth.access_token,
             "access_token_secret": auth.access_token_secret,
         }
-        with open("secrets.pickle", "w") as pickle_file:
+        with open("secrets.pickle", "wb") as pickle_file:
             pickle.dump(
                 {
                     "consumer_key": auth.consumer_key,

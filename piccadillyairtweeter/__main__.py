@@ -7,7 +7,7 @@ import tweepy
 
 from piccadillyairtweeter.secrets import log_in_to_twitter
 
-TWEETS_ENABLED = False
+TWEETS_ENABLED = True
 
 ACCOUNTS = {
     "CleanAirPicc": ("Piccadilly", "MAN3"),
