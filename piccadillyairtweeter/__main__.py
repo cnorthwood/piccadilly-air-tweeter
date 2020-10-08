@@ -5,7 +5,14 @@ from statistics import mean
 import requests
 import tweepy
 
-from piccadillyairtweeter.secrets import fetch_secrets
+from piccadillyairtweeter.secrets import log_in_to_twitter
+
+TWEETS_ENABLED = False
+
+ACCOUNTS = {
+    "CleanAirPicc": ("Piccadilly", "MAN3"),
+}
+
 
 THRESHOLDS = {
     "PM<sub>10</sub> particulate matter (Hourly measured)": 40,
@@ -84,19 +91,15 @@ def get_breach_messages(breaches):
             yield f"{name} levels breached air quality standards for {breaches[field]['hours_breached']} hours."
 
 
-def send_tweets(area_name, parts):
-    secrets = fetch_secrets()
-    auth = tweepy.OAuthHandler(secrets["consumer_key"], secrets["consumer_secret"])
-    auth.set_access_token(secrets["access_token"], secrets["access_token_secret"])
-    twitter = tweepy.API(auth)
-
+def send_tweets(twitter_auth, area_name, parts):
+    twitter = tweepy.API(twitter_auth)
     this_tweet = ""
     tweets = []
     while parts:
         part = parts.pop(0)
         if len(this_tweet) + len(part) + 1 > 280:
             tweets.append(this_tweet)
-            this_tweet = part
+            this_tweet = f"Yesterday in {area_name}, {part}"
         else:
             if this_tweet:
                 this_tweet = f"{this_tweet} {part}"
@@ -105,10 +108,19 @@ def send_tweets(area_name, parts):
     if this_tweet:
         tweets.append(this_tweet)
 
-    last_tweet_id = None
-    for tweet in tweets:
-        sent_tweet = twitter.update_status(status=tweet, in_reply_to_status_id=last_tweet_id)
-        last_tweet_id = sent_tweet.id
+    if twitter_auth:
+        last_tweet_id = None
+        for tweet in tweets:
+            sent_tweet = twitter.update_status(status=tweet, in_reply_to_status_id=last_tweet_id)
+            last_tweet_id = sent_tweet.id
+    else:
+        for tweet in tweets:
+            print(tweet)
 
 
-send_tweets("Piccadilly", list(get_breach_messages(get_breaches_yesterday("MAN3", THRESHOLDS))))
+for account_name, (area_name, area_code) in ACCOUNTS.items():
+    send_tweets(
+        log_in_to_twitter(account_name) if TWEETS_ENABLED else None,
+        area_name,
+        list(get_breach_messages(get_breaches_yesterday(area_code, THRESHOLDS))),
+    )
