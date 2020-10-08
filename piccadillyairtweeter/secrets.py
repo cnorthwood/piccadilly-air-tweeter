@@ -9,7 +9,7 @@ def get_twitter_oauth_handler():
         consumer_key = input("Twitter Consumer Key: ")
         consumer_secret = input("Twitter Consumer Secret: ")
         with open("secrets.pickle", "w") as pickle_file:
-            pickle.dumps(
+            pickle.dump(
                 {"consumer_key": consumer_key, "consumer_secret": consumer_secret, "accounts": {}},
                 pickle_file,
             )
@@ -33,7 +33,7 @@ def log_in_to_twitter(account_name):
             "access_token_secret": auth.access_token_secret,
         }
         with open("secrets.pickle", "w") as pickle_file:
-            pickle.dumps(
+            pickle.dump(
                 {
                     "consumer_key": auth.consumer_key,
                     "consumer_secret": auth.consumer_secret,
