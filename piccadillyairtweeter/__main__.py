@@ -88,7 +88,7 @@ def get_breach_messages(breaches):
         if breaches[field]["average_breached"]:
             yield f"{name} levels breached air quality standards all day."
         elif breaches[field]["hours_breached"] > 0:
-            yield f"{name} levels breached air quality standards for {breaches[field]['hours_breached']} hours."
+            yield f"{name} levels breached air quality standards for {breaches[field]['hours_breached']} hour{'s' if breaches[field]['hours_breached'] != 1 else ''}."
 
 
 def send_tweets(twitter_auth, area_name, parts):
