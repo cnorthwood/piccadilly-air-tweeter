@@ -2,13 +2,15 @@ from statistics import mean
 
 import tweepy
 
+from piccadillyairtweeter.cleanairgm import get_cleanairgm_readings_yesterday
 from piccadillyairtweeter.defra import get_defra_readings_yesterday
 from piccadillyairtweeter.secrets import log_in_to_twitter
 
-TWEETS_ENABLED = False
+TWEETS_ENABLED = True
 
 ACCOUNTS = {
-    "CleanAirPicc": ("Piccadilly", "defra", "MAN3"),
+    "CleanAirPicc": ("in Piccadilly Gardens", "defra", "MAN3"),
+    "CleanAirOxfRoad": ("on Oxford Road", "cleanairgm", "MAN1"),
 }
 
 THRESHOLDS = {
@@ -20,17 +22,20 @@ THRESHOLDS = {
 }
 
 
+def get_average_yesterday(readings):
+    return mean(readings) if readings else 0
+
+
 def get_breaches_yesterday(provider, *provider_args):
     if provider == "defra":
         yesterdays_readings = get_defra_readings_yesterday(*provider_args)
+    elif provider == "cleanairgm":
+        yesterdays_readings = get_cleanairgm_readings_yesterday(*provider_args)
     else:
         raise NotImplementedError(f"unrecognised provider: {provider}")
     return {
         field: {
-            "average_breached": mean(
-                readings[field] for readings in yesterdays_readings.values() if field in readings
-            )
-            > threshold,
+            "average_breached": get_average_yesterday([readings[field] for readings in yesterdays_readings.values() if field in readings]) > threshold,
             "hours_breached": sum(
                 1
                 for readings in yesterdays_readings.values()
@@ -57,12 +62,12 @@ def send_tweets(twitter_auth, area_name, parts):
         part = parts.pop(0)
         if len(this_tweet) + len(part) + 1 > 280:
             tweets.append(this_tweet)
-            this_tweet = f"Yesterday in {area_name}, {part}"
+            this_tweet = f"Yesterday {area_name}, {part}"
         else:
             if this_tweet:
                 this_tweet = f"{this_tweet} {part}"
             else:
-                this_tweet = f"Yesterday in {area_name}, {part}"
+                this_tweet = f"Yesterday {area_name}, {part}"
     if this_tweet:
         tweets.append(this_tweet)
 
