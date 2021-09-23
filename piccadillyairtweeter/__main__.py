@@ -13,12 +13,13 @@ ACCOUNTS = {
     "CleanAirOxfRoad": ("on Oxford Road", "cleanairgm", "MAN1"),
 }
 
+# https://apps.who.int/iris/bitstream/handle/10665/345329/9789240034228-eng.pdf?sequence=1&isAllowed=y
 THRESHOLDS = {
-    "NO₂": 40,
-    "PM2.5": 25,
-    "PM10": 40,
-    "Ozone": 120,
-    "SO₂": 125,
+    "NO₂": 25,
+    "PM2.5": 15,
+    "PM10": 45,
+    "Ozone": 100,
+    "SO₂": 40,
 }
 
 
