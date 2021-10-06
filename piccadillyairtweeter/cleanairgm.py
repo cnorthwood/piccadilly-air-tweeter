@@ -1,6 +1,7 @@
 import csv
 from collections import defaultdict
 from datetime import datetime, timedelta, date
+from itertools import chain
 
 import requests
 
@@ -11,15 +12,14 @@ NAMES = {
 }
 
 
-def download_data(station):
+def download_data(station, date):
     response = requests.get(
-        "https://ds9g7q4m5yn94.cloudfront.net/annual.php",
-        params={"station": station},
+        "https://cleanairgm.com/.netlify/functions/getSiteDetail",
+        params={"code": station, "yesterday": date.isoformat(), "today": (date + timedelta(days=1)).isoformat() },
         headers={"user-agent": "piccadillyairtweeter/0.1.0"},
     )
     response.raise_for_status()
-    lines = list(csv.reader(response.content.decode("utf-8").splitlines()))
-    return lines[1:]
+    return chain(*response.json())
 
 
 def build_datetime(dt_str):
@@ -35,14 +35,11 @@ def build_datetime(dt_str):
 def build_results_from_download(records):
     all_results = defaultdict(dict)
     for record in records:
-        for date, location, reading_type, value, unit in (record[i:i+5] for i in range(0, len(record), 5)):
-            if not value:
-                continue
-            all_results[build_datetime(date)][NAMES[reading_type]] = float(value)
+        all_results[build_datetime(record["MeasurementDate"])][NAMES[record["Species"]]] = float(record["Value"])
     return all_results
 
 
 def get_cleanairgm_readings_yesterday(station):
     yesterday = date.today() - timedelta(days=1)
-    annual_readings = build_results_from_download(download_data(station))
-    return {dt: readings for dt, readings in annual_readings.items() if dt.date() == yesterday}
+    readings = build_results_from_download(download_data(station, yesterday))
+    return {dt: readings for dt, readings in readings.items() if dt.date() == yesterday}
