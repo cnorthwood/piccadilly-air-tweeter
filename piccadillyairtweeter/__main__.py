@@ -35,24 +35,15 @@ def get_breaches_yesterday(provider, *provider_args):
     else:
         raise NotImplementedError(f"unrecognised provider: {provider}")
     return {
-        field: {
-            "average_breached": get_average_yesterday([readings[field] for readings in yesterdays_readings.values() if field in readings]) > threshold,
-            "hours_breached": sum(
-                1
-                for readings in yesterdays_readings.values()
-                if field in readings and readings[field] > threshold
-            ),
-        }
+        field: get_average_yesterday([readings[field] for readings in yesterdays_readings.values() if field in readings]) > threshold
         for field, threshold in THRESHOLDS.items()
     }
 
 
 def get_breach_messages(breaches):
-    for field, data in breaches.items():
-        if data["average_breached"]:
-            yield f"{field} levels breached air quality standards all day."
-        elif data["hours_breached"] > 0:
-            yield f"{field} levels breached air quality standards for {data['hours_breached']} hour{'s' if data['hours_breached'] != 1 else ''}."
+    for field, breached in breaches.items():
+        if breached:
+            yield f"{field} levels exceeded the short-term air quality guidelines"
 
 
 def send_tweets(twitter_auth, area_name, parts):
