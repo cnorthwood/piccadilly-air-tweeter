@@ -35,6 +35,8 @@ def build_datetime(dt_str):
 def build_results_from_download(records):
     all_results = defaultdict(dict)
     for record in records:
+        if not record["Value"]:
+            continue
         all_results[build_datetime(record["MeasurementDate"])][NAMES[record["Species"]]] = float(record["Value"])
     return all_results
 
