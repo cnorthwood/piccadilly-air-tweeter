@@ -27,7 +27,7 @@ def get_average_yesterday(readings):
     return mean(readings) if readings else 0
 
 
-def get_breaches_yesterday(provider, *provider_args):
+def get_levels_yesterday(provider, *provider_args):
     if provider == "defra":
         yesterdays_readings = get_defra_readings_yesterday(*provider_args)
     elif provider == "cleanairgm":
@@ -35,15 +35,15 @@ def get_breaches_yesterday(provider, *provider_args):
     else:
         raise NotImplementedError(f"unrecognised provider: {provider}")
     return {
-        field: get_average_yesterday([readings[field] for readings in yesterdays_readings.values() if field in readings]) > threshold
+        field: get_average_yesterday([readings[field] for readings in yesterdays_readings.values() if field in readings]) / threshold
         for field, threshold in THRESHOLDS.items()
     }
 
 
 def get_breach_messages(breaches):
-    for field, breached in breaches.items():
-        if breached:
-            yield f"{field} levels exceeded the short-term air quality guidelines"
+    for field, level in breaches.items():
+        if level >= 1.0:
+            yield f"{field} levels were {round(level, 1)} times the WHO air quality guideline threshold"
 
 
 def send_tweets(twitter_auth, area_name, parts):
@@ -52,14 +52,14 @@ def send_tweets(twitter_auth, area_name, parts):
     tweets = []
     while parts:
         part = parts.pop(0)
-        if len(this_tweet) + len(part) + 1 > 280:
+        if len(this_tweet) + len(part) + 2 > 280:
             tweets.append(this_tweet)
-            this_tweet = f"Yesterday {area_name}, {part}"
+            this_tweet = f"Yesterday {area_name}, {part}."
         else:
             if this_tweet:
-                this_tweet = f"{this_tweet} {part}"
+                this_tweet = f"{this_tweet} {part}."
             else:
-                this_tweet = f"Yesterday {area_name}, {part}"
+                this_tweet = f"Yesterday {area_name}, {part}."
     if this_tweet:
         tweets.append(this_tweet)
 
@@ -77,5 +77,5 @@ for account_name, (area_name, *provider) in ACCOUNTS.items():
     send_tweets(
         log_in_to_twitter(account_name) if TWEETS_ENABLED else None,
         area_name,
-        list(get_breach_messages(get_breaches_yesterday(*provider))),
+        list(get_breach_messages(get_levels_yesterday(*provider))),
     )
