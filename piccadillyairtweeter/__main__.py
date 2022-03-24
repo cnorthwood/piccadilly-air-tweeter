@@ -43,7 +43,7 @@ def get_levels_yesterday(provider, *provider_args):
 def get_breach_messages(breaches):
     for field, level in breaches.items():
         if level >= 1.0:
-            yield f"{field} levels were {round(level, 1)} times the WHO air quality guideline threshold"
+            yield f"{field} levels were {round(level, 1)} times the WHO air quality guidelines"
 
 
 def send_tweets(twitter_auth, area_name, parts):
