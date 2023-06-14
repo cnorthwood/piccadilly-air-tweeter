@@ -6,17 +6,17 @@ import tweepy
 
 def get_twitter_oauth_handler():
     if not os.path.exists("secrets.pickle"):
-        consumer_key = input("Twitter Consumer Key: ")
-        consumer_secret = input("Twitter Consumer Secret: ")
+        api_key = input("Twitter API Key: ")
+        secret_key = input("Twitter API Key Secret: ")
         with open("secrets.pickle", "wb") as pickle_file:
             pickle.dump(
-                {"consumer_key": consumer_key, "consumer_secret": consumer_secret, "accounts": {}},
+                {"api_key": api_key, "api_key_secret": secret_key, "accounts": {}},
                 pickle_file,
             )
     with open("secrets.pickle", "rb") as pickle_file:
         secrets = pickle.load(pickle_file)
         return (
-            tweepy.OAuthHandler(secrets["consumer_key"], secrets["consumer_secret"]),
+            tweepy.OAuth1UserHandler(secrets["api_key"], secrets["api_key_secret"], callback="oob"),
             secrets["accounts"],
         )
 
@@ -26,11 +26,11 @@ def log_in_to_twitter(account_name):
     if account_name not in account_secrets:
         redirect_url = auth.get_authorization_url()
         print(f"Go to {redirect_url} as {account_name}")
-        verifier = input("Twitter Verifier: ")
-        auth.get_access_token(verifier)
+        verifier = input("Twitter Verifier PIN: ")
+        access_token, access_token_secret = auth.get_access_token(verifier)
         account_secrets[account_name] = {
-            "access_token": auth.access_token,
-            "access_token_secret": auth.access_token_secret,
+            "access_token": access_token,
+            "access_token_secret": access_token_secret,
         }
         with open("secrets.pickle", "wb") as pickle_file:
             pickle.dump(
